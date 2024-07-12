@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <form id="search-form" class="mb-4">
+        <input id="search-input" type="text" name="query" placeholder="Search for a dish" class="border p-2 rounded w-full">
+    </form>
+    <div id="results"></div>
+
+    <script>
+        $(document).ready(function() {
+            $('#search-input').on('keyup', function() {
+                let query = $(this).val();
+                $.ajax({
+                    url: '{% url "search_view" %}',
+                    data: {
+                        'query': query
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        let results = $('#results');
+                        results.empty();
+                        if (data.results.length > 0) {
+                            data.results.forEach(function(result) {
+                                results.append('<div class="border p-2 mb-2 rounded bg-white"><h2 class="text-xl font-bold">' + result.name + '</h2><p>' + result.location + '</p></div>');
+                            });
+                        } else {
+                            results.append('<div class="border p-2 mb-2 rounded bg-white"><p>No results found</p></div>');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
