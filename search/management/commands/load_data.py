@@ -5,10 +5,8 @@ from search.models import Restaurant
 
 class Command(BaseCommand):
     help = 'Load data from CSV file'
-
     def handle(self, *args, **kwargs):
         file_path = 'data.csv'
-
         try:
             with open(file_path, newline='', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)

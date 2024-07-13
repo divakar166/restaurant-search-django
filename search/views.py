@@ -1,7 +1,5 @@
 from django.shortcuts import render, get_object_or_404
 from .models import Restaurant
-from .forms import SearchForm
-from django.core.paginator import Paginator
 from django.http import JsonResponse
 import json
 
@@ -18,8 +16,12 @@ def search_view(request):
             results = results.filter(location__icontains=location)
         if cuisine:
             results = results.filter(full_details__cuisines__icontains=cuisine)
-
-        results = [{'id': r.id, 'name': r.name, 'location': r.location} for r in results]
+        # results = [{'id': r.id, 'name': r.name, 'location': r.location, 'item': json.loads(r.items).get(query, 'Price not available') } for r in results]
+        results = [
+            {'id': r.id, 'name': r.name, 'location': r.location, 'item': json.loads(r.items).get(query) }
+            for r in results
+            if query in json.loads(r.items)
+        ]
         return JsonResponse({'results': results})
 
 def index(request):

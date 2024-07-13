@@ -32,26 +32,6 @@
                 <li class="border p-2 mb-2 rounded bg-white">No results found</li>
             {% endfor %}
         </ul>
-
-        {% if results.has_other_pages %}
-            <div class="pagination">
-                <span class="step-links">
-                    {% if results.has_previous %}
-                        <a href="?page=1&query={{ query }}&location={{ location }}&cuisine={{ cuisine }}">First</a>
-                        <a href="?page={{ results.previous_page_number }}&query={{ query }}&location={{ location }}&cuisine={{ cuisine }}">Previous</a>
-                    {% endif %}
-
-                    <span class="current">
-                        Page {{ results.number }} of {{ results.paginator.num_pages }}.
-                    </span>
-
-                    {% if results.has_next %}
-                        <a href="?page={{ results.next_page_number }}&query={{ query }}&location={{ location }}&cuisine={{ cuisine }}">Next</a>
-                        <a href="?page={{ results.paginator.num_pages }}&query={{ query }}&location={{ location }}&cuisine={{ cuisine }}">Last</a>
-                    {% endif %}
-                </span>
-            </div>
-        {% endif %}
     {% endif %}
 
     <script>
@@ -61,12 +41,10 @@
                 let location = $('#location').val();
                 let cuisine = $('#cuisine').val();
                 if (query == "" && location == "" && cuisine == ""){
-                    console.log('okay')
                     let results = $('#results');
                     results.empty();
                     return;
                 }
-
                 $.ajax({
                     url: '{% url "search_view" %}',
                     method: 'GET',
@@ -81,7 +59,26 @@
                         results.empty();
                         if (data.results.length > 0) {
                             data.results.forEach(function(result) {
-                                results.append('<div class="border p-2 mb-2 rounded bg-white"><h2 class="text-xl font-bold"><a href="/restaurant/' + result.id + '/">' + result.name + '</a></h2><p>' + result.location + '</p></div>');
+                                if (query != '') {
+                                    results.append(`
+                                        <div class="border p-2 mb-2 rounded bg-white">
+                                            <h2 class="text-xl font-bold">
+                                                <a href="/restaurant/${result.id}/">${result.name}</a>
+                                                <span class="text-blue-500 pl-2">${query}: Rs. ${result.item}</span>
+                                            </h2>
+                                            <p>${result.location}</p>
+                                        </div>
+                                    `);
+                                } else {
+                                    results.append(`
+                                        <div class="border p-2 mb-2 rounded bg-white">
+                                            <h2 class="text-xl font-bold">
+                                                <a href="/restaurant/${result.id}/">${result.name}</a>
+                                            </h2>
+                                            <p>${result.location}</p>
+                                        </div>
+                                    `);
+                                }
                             });
                         } else {
                             results.append('<div class="border p-2 mb-2 rounded bg-white"><p>No results found</p></div>');
@@ -90,8 +87,28 @@
                 });
             }
 
-            $('#search-input, #location, #cuisine').on('keyup', fetchResults);
+            function validateForm() {
+                let query = $('#search-input').val().trim();
+                let location = $('#location');
+                let cuisine = $('#cuisine');
+                let submitButton = $('button[type="submit"]');
+
+                if (query) {
+                    location.prop('disabled', false);
+                    cuisine.prop('disabled', false);
+                } else {
+                    location.val('').prop('disabled', true);
+                    cuisine.val('').prop('disabled', true);
+                }
+            }
+            $('#search-input').on('keyup', function() {
+                validateForm();
+                fetchResults();
+            });
+            $('#location, #cuisine').on('keyup', fetchResults);
+            validateForm();
         });
+
 
     </script>
 {% endblock %}
