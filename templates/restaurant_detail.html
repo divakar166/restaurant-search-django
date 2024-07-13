@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="border p-4 rounded bg-white">
+        <h2 class="text-2xl font-bold">{{ restaurant.name }}</h2>
+        <p><strong>Location :</strong> {{ address }}, {{ city }}</p>
+        <p><strong>Maps :</strong>
+            <a href="https://www.google.com/maps?q={{ lat }},{{ lng }}" target="_blank" class="text-blue-500">View on Google Maps</a>
+        </p>
+        <p><strong>Cuisines :</strong> {{ cuisines }}</p>
+        <p><strong>Items</strong></p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {% for item, price in items.items %}
+                <div class="border p-2 rounded bg-gray-100">
+                    <p class="font-bold">{{ item }}</p>
+                    <p class="text-gray-600">Price: ₹{{ price }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

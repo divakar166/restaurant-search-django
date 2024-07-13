@@ -1,19 +1,79 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <form id="search-form" class="mb-4">
-        <input id="search-input" type="text" name="query" placeholder="Search for a dish" class="border p-2 rounded w-full">
+    <form id="search-form" method="get" action="{% url 'search_view' %}" class="mb-4">
+        <div class="flex justify-around">
+            <div class="w-1/3 mr-2">
+                <label for="query" class="block text-gray-700">Search for a dish</label>
+                <input id="search-input" type="text" name="query" placeholder="Search for a dish" class="border p-2 rounded w-full">
+            </div>
+            <div class="w-1/3 mr-2">
+                <label for="location" class="block text-gray-700">Location</label>
+                <input id="location" type="text" name="location" placeholder="Location" class="border p-2 rounded w-full">
+            </div>
+            <div class="w-1/3">
+                <label for="cuisine" class="block text-gray-700">Cuisine</label>
+                <input id="cuisine" type="text" name="cuisine" placeholder="Cuisine" class="border p-2 rounded w-full">
+            </div>
+        </div>
     </form>
+    
     <div id="results"></div>
+
+    {% if query or location or cuisine %}
+        <h2 class="text-2xl font-bold mb-4">Results</h2>
+        <ul>
+            {% for restaurant in results %}
+                <li class="border p-2 mb-2 rounded bg-white">
+                    <h2 class="text-xl font-bold">{{ restaurant.name }}</h2>
+                    <p>{{ restaurant.location }}</p>
+                </li>
+            {% empty %}
+                <li class="border p-2 mb-2 rounded bg-white">No results found</li>
+            {% endfor %}
+        </ul>
+
+        {% if results.has_other_pages %}
+            <div class="pagination">
+                <span class="step-links">
+                    {% if results.has_previous %}
+                        <a href="?page=1&query={{ query }}&location={{ location }}&cuisine={{ cuisine }}">First</a>
+                        <a href="?page={{ results.previous_page_number }}&query={{ query }}&location={{ location }}&cuisine={{ cuisine }}">Previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ results.number }} of {{ results.paginator.num_pages }}.
+                    </span>
+
+                    {% if results.has_next %}
+                        <a href="?page={{ results.next_page_number }}&query={{ query }}&location={{ location }}&cuisine={{ cuisine }}">Next</a>
+                        <a href="?page={{ results.paginator.num_pages }}&query={{ query }}&location={{ location }}&cuisine={{ cuisine }}">Last</a>
+                    {% endif %}
+                </span>
+            </div>
+        {% endif %}
+    {% endif %}
 
     <script>
         $(document).ready(function() {
-            $('#search-input').on('keyup', function() {
-                let query = $(this).val();
+            function fetchResults() {
+                let query = $('#search-input').val();
+                let location = $('#location').val();
+                let cuisine = $('#cuisine').val();
+                if (query == "" && location == "" && cuisine == ""){
+                    console.log('okay')
+                    let results = $('#results');
+                    results.empty();
+                    return;
+                }
+
                 $.ajax({
                     url: '{% url "search_view" %}',
+                    method: 'GET',
                     data: {
-                        'query': query
+                        'query': query,
+                        'location': location,
+                        'cuisine': cuisine
                     },
                     dataType: 'json',
                     success: function(data) {
@@ -21,14 +81,17 @@
                         results.empty();
                         if (data.results.length > 0) {
                             data.results.forEach(function(result) {
-                                results.append('<div class="border p-2 mb-2 rounded bg-white"><h2 class="text-xl font-bold">' + result.name + '</h2><p>' + result.location + '</p></div>');
+                                results.append('<div class="border p-2 mb-2 rounded bg-white"><h2 class="text-xl font-bold"><a href="/restaurant/' + result.id + '/">' + result.name + '</a></h2><p>' + result.location + '</p></div>');
                             });
                         } else {
                             results.append('<div class="border p-2 mb-2 rounded bg-white"><p>No results found</p></div>');
                         }
                     }
                 });
-            });
+            }
+
+            $('#search-input, #location, #cuisine').on('keyup', fetchResults);
         });
+
     </script>
 {% endblock %}
