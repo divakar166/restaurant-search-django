@@ -16,12 +16,12 @@ def search_view(request):
             results = results.filter(location__icontains=location)
         if cuisine:
             results = results.filter(full_details__cuisines__icontains=cuisine)
-        # results = [{'id': r.id, 'name': r.name, 'location': r.location, 'item': json.loads(r.items).get(query, 'Price not available') } for r in results]
-        results = [
-            {'id': r.id, 'name': r.name, 'location': r.location, 'item': json.loads(r.items).get(query) }
-            for r in results
-            if query in json.loads(r.items)
-        ]
+        # results = [
+        #     {'id': r.id, 'name': r.name, 'location': r.location, 'item': json.loads(r.items).get(query) }
+        #     for r in results
+        # ]
+
+        results = [{'id': r.id, 'name': r.name, 'location': r.location, 'item': next((f"{name}: {price}" for name, price in json.loads(r.items).items() if query.lower() in name.lower()), 'Price not available')} for r in results]
         return JsonResponse({'results': results})
 
 def index(request):
